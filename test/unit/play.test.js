@@ -121,7 +121,7 @@ const mainModule = function(playReturnValue, middlewareTermination, subhooks) {
     this.clock.restore();
   });
 
-  QUnit.test('Player#play() resolves correctly with dom sources and async tech ready', function(assert) {
+  QUnit.test('resolves correctly with dom sources and async tech ready', function(assert) {
     // turn of mediaLoader to prevent setting a tech right away
     // similar to settings sources in the DOM
     // turn off autoReady to prevent syncronous ready from the tech
@@ -196,7 +196,7 @@ const mainModule = function(playReturnValue, middlewareTermination, subhooks) {
     this.finish(assert);
   });
 
-  QUnit.test('Player#play() resolves correctly with dom sources', function(assert) {
+  QUnit.test('resolves correctly with dom sources', function(assert) {
     this.player = TestHelpers.makePlayer({mediaLoader: false});
 
     this.playTest('before anything is ready');
@@ -210,13 +210,15 @@ const mainModule = function(playReturnValue, middlewareTermination, subhooks) {
       changingSrc: true
     });
 
+    // player ready calls fire now
+    // which sets changingSrc_ to false
     this.clock.tick(1);
 
-    this.playTest('still changingSrc, tech/player ready', {
-      techLoaded: true,
-      changingSrc: true,
+    this.playTest('tech/player ready', {
       playerReady: true,
-      techReady: true
+      techReady: true,
+      playCalls: this.terminate ? 0 : 1,
+      playsTerminated: this.terminate ? 1 : 0
     });
 
     this.clock.tick(1);
@@ -224,8 +226,8 @@ const mainModule = function(playReturnValue, middlewareTermination, subhooks) {
     this.playTest('done changingSrc, tech#play is called', {
       playerReady: true,
       techReady: true,
-      playCalls: this.terminate ? 0 : 1,
-      playsTerminated: this.terminate ? 1 : 0
+      playCalls: this.terminate ? 0 : 2,
+      playsTerminated: this.terminate ? 2 : 0
     });
 
     this.clock.tick(1);
@@ -233,15 +235,15 @@ const mainModule = function(playReturnValue, middlewareTermination, subhooks) {
     this.checkState('state stays the same', {
       playerReady: true,
       techReady: true,
-      playCalls: this.terminate ? 0 : 1,
-      playsTerminated: this.terminate ? 1 : 0
+      playCalls: this.terminate ? 0 : 2,
+      playsTerminated: this.terminate ? 2 : 0
     });
 
     this.playTest('future calls hit tech#play directly', {
       playerReady: true,
       techReady: true,
-      playCalls: this.terminate ? 0 : 2,
-      playsTerminated: this.terminate ? 2 : 0
+      playCalls: this.terminate ? 0 : 3,
+      playsTerminated: this.terminate ? 3 : 0
     });
 
     if (this.terminate) {
@@ -251,21 +253,21 @@ const mainModule = function(playReturnValue, middlewareTermination, subhooks) {
         playerReady: true,
         techReady: true,
         playCalls: 1,
-        playsTerminated: 2
+        playsTerminated: 3
       });
 
       this.playTest('future calls hit tech#play directly', {
         playerReady: true,
         techReady: true,
         playCalls: 2,
-        playsTerminated: 2
+        playsTerminated: 3
       });
     }
 
     this.finish(assert);
   });
 
-  QUnit.test('Player#play() resolves correctly with async tech ready', function(assert) {
+  QUnit.test('resolves correctly with async tech ready', function(assert) {
     this.player = TestHelpers.makePlayer({techFaker: {autoReady: false}});
 
     this.playTest('before anything is ready', {
@@ -300,16 +302,18 @@ const mainModule = function(playReturnValue, middlewareTermination, subhooks) {
       techReady: true,
       changingSrc: true
     });
-    this.clock.tick(1);
-
-    this.playTest('still changingSrc tech/player ready', {
-      changingSrc: true,
-      playerReady: true,
-      techReady: true
-    });
 
     // player ready calls fire now
     // which sets changingSrc_ to false
+    this.clock.tick(1);
+
+    this.playTest('tech/player ready', {
+      playerReady: true,
+      techReady: true,
+      playCalls: this.terminate ? 0 : 1,
+      playsTerminated: this.terminate ? 1 : 0
+    });
+
     this.clock.tick(1);
 
     this.checkState('play was called on ready', {
@@ -347,7 +351,7 @@ const mainModule = function(playReturnValue, middlewareTermination, subhooks) {
     this.finish(assert);
   });
 
-  QUnit.test('Player#play() resolves correctly', function(assert) {
+  QUnit.test('resolves correctly', function(assert) {
     this.player = TestHelpers.makePlayer();
 
     this.playTest('player/tech start out ready', {
@@ -413,7 +417,7 @@ const mainModule = function(playReturnValue, middlewareTermination, subhooks) {
   });
 
   // without enableSourceset this test will fail.
-  QUnit.test('Player#play() resolves correctly on tech el src', function(assert) {
+  QUnit.test('resolves correctly on tech el src', function(assert) {
     this.player = TestHelpers.makePlayer({techOrder: ['html5'], enableSourceset: true});
 
     this.playTest('player/tech start out ready', {

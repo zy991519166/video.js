@@ -3109,18 +3109,17 @@ class Player extends Component {
       return true;
     }
 
-    if (titleCaseEquals(sourceTech.tech, this.techName_)) {
-      return false;
+    if (!titleCaseEquals(sourceTech.tech, this.techName_)) {
+      // load this technology with the chosen source
+      this.loadTech_(sourceTech.tech, sourceTech.source);
     }
 
     this.changingSrc_ = true;
-    // load this technology with the chosen source
-    this.loadTech_(sourceTech.tech, sourceTech.source);
 
     // wait until the tech is ready to set the source
     // and set it synchronously if possible (#2326)
     const handleTechInit = (e) => {
-      this.off(['ready', 'loadstart'], handleTechInit);
+      this.tech_.off(['ready', 'loadstart'], handleTechInit);
       if (e.type === 'ready') {
         // The setSource tech method was added with source handlers
         // so older techs won't support it
@@ -3132,10 +3131,15 @@ class Player extends Component {
           this.techCall_('src', source.src);
         }
       }
+
       this.changingSrc_ = false;
     };
 
-    this.on(['ready', 'loadstart'], handleTechInit);
+    if (this.tech_.isReady_) {
+      handleTechInit({type: 'ready'});
+    } else {
+      this.tech_.on(['ready', 'loadstart'], handleTechInit);
+    }
 
     return false;
   }
